@@ -36,8 +36,17 @@ let activeEffect
 
 // 4.2 一种收集依赖的机制
 function effect(fn){
-  activeEffect = fn
-  fn()
+  const effectFn = () => {
+    // 每次执行前清除依赖
+    cleanup(effectFn)
+    activeEffect = effectFn
+    fn()
+  }
+
+  // 记录副作用函数被那些依赖收集
+  effectFn.deps = []
+
+  effectFn()
 }
 
 // 5.1 依赖收集函数
@@ -54,13 +63,24 @@ function track(target, key) {
 
   deps.add(activeEffect)
 }
-// 5.2 触发依赖函数
+// 5.1 触发依赖函数
 function trigger(target, key) {
   const depsMap = bucket.get(target)
   if(!depsMap) return
 
   const effects = depsMap.get(key)
   effects && effects.forEach( fn => fn())
+}
+
+// 6.1 依赖清除函数
+function cleanup(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    // 将effectFn从依赖集合中删除
+    deps.delete(effectFn)
+  }
+  // 重置effectFn记录
+  effectFn.deps.length = 0
 }
 
 effect(work)
