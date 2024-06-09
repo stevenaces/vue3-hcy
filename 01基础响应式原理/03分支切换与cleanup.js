@@ -69,7 +69,10 @@ function trigger(target, key) {
   if(!depsMap) return
 
   const effects = depsMap.get(key)
-  effects && effects.forEach( fn => fn())
+
+  const effectsRoRun = new Set(effects)
+  effectsRoRun && effectsRoRun.forEach( effectFn => effectFn())
+  // effects && effects.forEach( effectFn => effectFn())
 }
 
 // 6.1 依赖清除函数
